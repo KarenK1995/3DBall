@@ -92,6 +92,7 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
     @objc func updateGame() {
         ballNode.physicsBody?.applyForce(SCNVector3(0, 0, -1), asImpulse: false)
         cameraNode.position.z = ballNode.presentation.position.z + 10
+        cameraNode.look(at: ballNode.presentation.position)
 
         groundManager.update(for: ballNode.presentation.position.z)
         obstacleManager.update(for: ballNode.presentation.position.z)
