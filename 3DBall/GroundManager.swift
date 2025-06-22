@@ -36,13 +36,13 @@ class GroundManager {
 
             // Left border rail
             let leftBorder = SCNBox(width: borderThickness, height: borderHeight, length: tileLength, chamferRadius: 0)
-            leftBorder.firstMaterial?.diffuse.contents = UIColor.black
+            leftBorder.firstMaterial?.diffuse.contents = UIColor.purple
             let leftNode = SCNNode(geometry: leftBorder)
             leftNode.position = SCNVector3(-Float(roadWidth / 2 + borderThickness / 2), Float(borderHeight / 2), 0)
 
             // Right border rail
             let rightBorder = SCNBox(width: borderThickness, height: borderHeight, length: tileLength, chamferRadius: 0)
-            rightBorder.firstMaterial?.diffuse.contents = UIColor.black
+            rightBorder.firstMaterial?.diffuse.contents = UIColor.purple
             let rightNode = SCNNode(geometry: rightBorder)
             rightNode.position = SCNVector3(Float(roadWidth / 2 + borderThickness / 2), Float(borderHeight / 2), 0)
 
