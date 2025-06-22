@@ -6,111 +6,98 @@
 //
 
 import UIKit
-import QuartzCore
 import SceneKit
+import Foundation
 
-class GameViewController: UIViewController {
+class GameViewController: UIViewController, SCNPhysicsContactDelegate {
+
+    var sceneView: SCNView!
+    var ballNode: PlayerNode!
+    var cameraNode: SCNNode!
+    var scene: SCNScene!
+    var groundManager: GroundManager!
+    var obstacleManager: ObstacleManager!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // create a new scene
-        let scene = SCNScene(named: "art.scnassets/ship.scn")!
+        sceneView = SCNView(frame: self.view.frame)
+        self.view.addSubview(sceneView)
         
-        // create and add a camera to the scene
-        let cameraNode = SCNNode()
+        scene = SCNScene()
+        sceneView.scene = scene
+        scene.physicsWorld.contactDelegate = self
+        sceneView.showsStatistics = false
+        sceneView.allowsCameraControl = false
+        
+        setupCamera()
+        setupBall()
+        setupGround()
+        obstacleManager = ObstacleManager(scene: scene)
+        setupGestures()
+        
+        // Timer to move ground and simulate forward motion
+        Timer.scheduledTimer(timeInterval: 0.02, target: self, selector: #selector(updateGame), userInfo: nil, repeats: true)
+    }
+
+    func setupCamera() {
+        cameraNode = SCNNode()
         cameraNode.camera = SCNCamera()
+        cameraNode.position = SCNVector3(0, 5, 10)
+        cameraNode.look(at: SCNVector3(0, 0, 0))
         scene.rootNode.addChildNode(cameraNode)
-        
-        // place the camera
-        cameraNode.position = SCNVector3(x: 0, y: 0, z: 15)
-        
-        // create and add a light to the scene
-        let lightNode = SCNNode()
-        lightNode.light = SCNLight()
-        lightNode.light!.type = .omni
-        lightNode.position = SCNVector3(x: 0, y: 10, z: 10)
-        scene.rootNode.addChildNode(lightNode)
-        
-        // create and add an ambient light to the scene
-        let ambientLightNode = SCNNode()
-        ambientLightNode.light = SCNLight()
-        ambientLightNode.light!.type = .ambient
-        ambientLightNode.light!.color = UIColor.darkGray
-        scene.rootNode.addChildNode(ambientLightNode)
-        
-        // retrieve the ship node
-        let ship = scene.rootNode.childNode(withName: "ship", recursively: true)!
-        
-        // animate the 3d object
-        ship.runAction(SCNAction.repeatForever(SCNAction.rotateBy(x: 0, y: 2, z: 0, duration: 1)))
-        
-        // retrieve the SCNView
-        let scnView = self.view as! SCNView
-        
-        // set the scene to the view
-        scnView.scene = scene
-        
-        // allows the user to manipulate the camera
-        scnView.allowsCameraControl = true
-        
-        // show statistics such as fps and timing information
-        scnView.showsStatistics = true
-        
-        // configure the view
-        scnView.backgroundColor = UIColor.black
-        
-        // add a tap gesture recognizer
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
-        scnView.addGestureRecognizer(tapGesture)
     }
-    
-    @objc
-    func handleTap(_ gestureRecognize: UIGestureRecognizer) {
-        // retrieve the SCNView
-        let scnView = self.view as! SCNView
-        
-        // check what nodes are tapped
-        let p = gestureRecognize.location(in: scnView)
-        let hitResults = scnView.hitTest(p, options: [:])
-        // check that we clicked on at least one object
-        if hitResults.count > 0 {
-            // retrieved the first clicked object
-            let result = hitResults[0]
-            
-            // get its material
-            let material = result.node.geometry!.firstMaterial!
-            
-            // highlight it
-            SCNTransaction.begin()
-            SCNTransaction.animationDuration = 0.5
-            
-            // on completion - unhighlight
-            SCNTransaction.completionBlock = {
-                SCNTransaction.begin()
-                SCNTransaction.animationDuration = 0.5
-                
-                material.emission.contents = UIColor.black
-                
-                SCNTransaction.commit()
-            }
-            
-            material.emission.contents = UIColor.red
-            
-            SCNTransaction.commit()
-        }
+
+    func setupBall() {
+        ballNode = PlayerNode(textureName: "ballTexture")
+        scene.rootNode.addChildNode(ballNode)
     }
-    
-    override var prefersStatusBarHidden: Bool {
-        return true
+
+    func setupGround() {
+        groundManager = GroundManager(scene: scene)
     }
-    
-    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            return .allButUpsideDown
-        } else {
-            return .all
+
+    func setupGestures() {
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        swipeLeft.direction = .left
+        sceneView.addGestureRecognizer(swipeLeft)
+
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        swipeRight.direction = .right
+        sceneView.addGestureRecognizer(swipeRight)
+
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+        sceneView.addGestureRecognizer(tap)
+
+        let swipeUp = UISwipeGestureRecognizer(target: self, action: #selector(handleTap(_:)))
+        swipeUp.direction = .up
+        sceneView.addGestureRecognizer(swipeUp)
+    }
+
+    @objc func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
+        switch gesture.direction {
+        case .left:
+            ballNode.moveLeft()
+        case .right:
+            ballNode.moveRight()
+        default:
+            break
         }
     }
 
+    @objc func handleTap(_ gesture: UITapGestureRecognizer) {
+        ballNode.jump()
+    }
+
+    @objc func updateGame() {
+        ballNode.physicsBody?.applyForce(SCNVector3(0, 0, -1), asImpulse: false)
+        cameraNode.position.z = ballNode.presentation.position.z + 10
+
+        groundManager.update(for: ballNode.presentation.position.z)
+        obstacleManager.update(for: ballNode.presentation.position.z)
+    }
+
+    func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
+        print("Collision detected!")
+    }
 }
