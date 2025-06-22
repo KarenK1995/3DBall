@@ -85,7 +85,8 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
         }
     }
 
-    @objc func handleTap(_ gesture: UITapGestureRecognizer) {
+    // Accept any gesture recognizer so the method can be reused for taps and swipes
+    @objc func handleTap(_ gesture: UIGestureRecognizer) {
         ballNode.jump()
     }
 
