@@ -4,9 +4,17 @@ class PlayerNode: SCNNode {
 
     private let lanes: [Float] = [-2, 0, 2]
     private var currentLaneIndex: Int = 1
+    private let moveSound: SCNAudioSource
 
     init(textureName: String) {
         super.init()
+
+        guard let sound = SCNAudioSource(fileNamed: "art.scnassets/moveSound.wav") else {
+            fatalError("Move sound file missing")
+        }
+        sound.volume = 0.8
+        sound.load()
+        self.moveSound = sound
 
         let ballGeometry = SCNSphere(radius: 0.5)
         let material = SCNMaterial()
@@ -39,12 +47,18 @@ class PlayerNode: SCNNode {
         guard currentLaneIndex > 0 else { return }
         currentLaneIndex -= 1
         moveToCurrentLane()
+        playMoveSound()
     }
 
     func moveRight() {
         guard currentLaneIndex < lanes.count - 1 else { return }
         currentLaneIndex += 1
         moveToCurrentLane()
+        playMoveSound()
+    }
+
+    private func playMoveSound() {
+        runAction(SCNAction.playAudio(moveSound, waitForCompletion: false))
     }
 
     private func moveToCurrentLane() {
