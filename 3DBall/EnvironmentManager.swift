@@ -1,83 +1,31 @@
 import SceneKit
 import UIKit
 
-enum EnvironmentType {
-    case day
-    case dusk
-    case night
-}
-
 class EnvironmentManager {
     private let scene: SCNScene
-    private var ambientLight: SCNLight!
-    private var directionalLight: SCNLight!
-    private var currentType: EnvironmentType
+    private var skyNode: SCNNode?
 
-    init(scene: SCNScene, type: EnvironmentType = .day) {
+    init(scene: SCNScene) {
         self.scene = scene
-        self.currentType = type
+        setupBackground()
         setupLighting()
         setupFog()
-        updateEnvironment(to: type)
+        setupSkyDome()
     }
 
-    func updateEnvironment(to type: EnvironmentType) {
-        currentType = type
-        let colors = gradientColors(for: type)
-        let image = gradientImage(colors: colors)
+    private func setupBackground() {
+        let image = gradientImage()
         scene.background.contents = image
         scene.lightingEnvironment.contents = image
         scene.lightingEnvironment.intensity = 1.0
-
-        switch type {
-        case .day:
-            ambientLight.color = UIColor(white: 0.6, alpha: 1.0)
-            directionalLight.color = UIColor(white: 0.9, alpha: 1.0)
-        case .dusk:
-            ambientLight.color = UIColor(displayP3Red: 0.8, green: 0.5, blue: 0.4, alpha: 1.0)
-            directionalLight.color = UIColor(displayP3Red: 1.0, green: 0.6, blue: 0.5, alpha: 1.0)
-        case .night:
-            ambientLight.color = UIColor(displayP3Red: 0.2, green: 0.2, blue: 0.3, alpha: 1.0)
-            directionalLight.color = UIColor(displayP3Red: 0.4, green: 0.4, blue: 0.6, alpha: 1.0)
-        }
-
-        scene.fogColor = UIColor(cgColor: colors[0])
     }
 
-    private func setupLighting() {
-        ambientLight = SCNLight()
-        ambientLight.type = .ambient
-        let ambientNode = SCNNode()
-        ambientNode.light = ambientLight
-        scene.rootNode.addChildNode(ambientNode)
-
-        directionalLight = SCNLight()
-        directionalLight.type = .directional
-        let directionalNode = SCNNode()
-        directionalNode.light = directionalLight
-        directionalNode.eulerAngles = SCNVector3(-Float.pi/3, 0, 0)
-        scene.rootNode.addChildNode(directionalNode)
-    }
-
-    private func gradientColors(for type: EnvironmentType) -> [CGColor] {
-        switch type {
-        case .day:
-            return [UIColor(displayP3Red: 0.6, green: 0.8, blue: 1.0, alpha: 1.0).cgColor,
-                    UIColor(displayP3Red: 0.2, green: 0.3, blue: 0.5, alpha: 1.0).cgColor]
-        case .dusk:
-            return [UIColor(displayP3Red: 0.98, green: 0.5, blue: 0.2, alpha: 1.0).cgColor,
-                    UIColor(displayP3Red: 0.3, green: 0.0, blue: 0.3, alpha: 1.0).cgColor]
-        case .night:
-            return [UIColor(displayP3Red: 0.05, green: 0.05, blue: 0.2, alpha: 1.0).cgColor,
-                    UIColor(displayP3Red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0).cgColor]
-        }
-    }
-
-    private func gradientImage(colors: [CGColor]) -> UIImage {
+    private func gradientImage() -> UIImage {
         let size = CGSize(width: 1, height: 512)
         let layer = CAGradientLayer()
         layer.frame = CGRect(origin: .zero, size: size)
-        layer.colors = colors
+        layer.colors = [UIColor(displayP3Red: 0.6, green: 0.8, blue: 1.0, alpha: 1.0).cgColor,
+                        UIColor(displayP3Red: 0.2, green: 0.3, blue: 0.5, alpha: 1.0).cgColor]
         UIGraphicsBeginImageContextWithOptions(layer.frame.size, true, 0)
         layer.render(in: UIGraphicsGetCurrentContext()!)
         let image = UIGraphicsGetImageFromCurrentImageContext()!
@@ -85,9 +33,46 @@ class EnvironmentManager {
         return image
     }
 
+    private func setupLighting() {
+        let ambient = SCNLight()
+        ambient.type = .ambient
+        ambient.color = UIColor(white: 0.6, alpha: 1.0)
+        let ambientNode = SCNNode()
+        ambientNode.light = ambient
+        scene.rootNode.addChildNode(ambientNode)
+
+        let directional = SCNLight()
+        directional.type = .directional
+        directional.color = UIColor(white: 0.95, alpha: 1.0)
+        directional.castsShadow = true
+        directional.shadowColor = UIColor(white: 0.0, alpha: 0.5)
+        directional.shadowRadius = 10
+        let directionalNode = SCNNode()
+        directionalNode.light = directional
+        directionalNode.eulerAngles = SCNVector3(-Float.pi/3, Float.pi/4, 0)
+        scene.rootNode.addChildNode(directionalNode)
+    }
+
     private func setupFog() {
         scene.fogStartDistance = 40
         scene.fogEndDistance = 70
         scene.fogDensityExponent = 0.5
+        scene.fogColor = UIColor(displayP3Red: 0.6, green: 0.8, blue: 1.0, alpha: 1.0)
+    }
+
+    private func setupSkyDome() {
+        let sphere = SCNSphere(radius: 150)
+        sphere.segmentCount = 48
+        sphere.firstMaterial?.diffuse.contents = gradientImage()
+        sphere.firstMaterial?.isDoubleSided = true
+        sphere.firstMaterial?.lightingModel = .constant
+        sphere.firstMaterial?.cullMode = .front
+        let node = SCNNode(geometry: sphere)
+        scene.rootNode.addChildNode(node)
+        skyNode = node
+    }
+
+    func update(position: SCNVector3) {
+        skyNode?.position = position
     }
 }
