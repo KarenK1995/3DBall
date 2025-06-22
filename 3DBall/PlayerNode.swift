@@ -2,6 +2,9 @@ import SceneKit
 
 class PlayerNode: SCNNode {
 
+    private let lanes: [Float] = [-2, 0, 2]
+    private var currentLaneIndex: Int = 1
+
     init(textureName: String) {
         super.init()
 
@@ -33,14 +36,21 @@ class PlayerNode: SCNNode {
     }
 
     func moveLeft() {
-        if position.x > -2 {
-            position.x -= 2
-        }
+        guard currentLaneIndex > 0 else { return }
+        currentLaneIndex -= 1
+        moveToCurrentLane()
     }
 
     func moveRight() {
-        if position.x < 2 {
-            position.x += 2
-        }
+        guard currentLaneIndex < lanes.count - 1 else { return }
+        currentLaneIndex += 1
+        moveToCurrentLane()
+    }
+
+    private func moveToCurrentLane() {
+        let newX = lanes[currentLaneIndex]
+        let action = SCNAction.move(to: SCNVector3(newX, position.y, position.z), duration: 0.1)
+        action.timingMode = .easeInEaseOut
+        runAction(action)
     }
 }
