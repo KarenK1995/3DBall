@@ -22,12 +22,33 @@ class GroundManager {
             material.diffuse.contents = UIColor.darkGray
         }
 
+        let roadWidth: CGFloat = 6.0
+        let tileLength: CGFloat = 20.0
+        let borderThickness: CGFloat = 0.2
+        let borderHeight: CGFloat = 0.5
+
         for i in 0..<5 {
-            let ground = SCNBox(width: 10, height: 0.2, length: 20, chamferRadius: 0)
+            let ground = SCNBox(width: roadWidth, height: 0.2, length: tileLength, chamferRadius: 0)
             ground.materials = [material]
             let groundNode = SCNNode(geometry: ground)
-            groundNode.position = SCNVector3(0, 0, -Float(i) * 20)
+            groundNode.position = SCNVector3(0, 0, -Float(i) * Float(tileLength))
             groundNode.physicsBody = SCNPhysicsBody.static()
+
+            // Left border rail
+            let leftBorder = SCNBox(width: borderThickness, height: borderHeight, length: tileLength, chamferRadius: 0)
+            leftBorder.firstMaterial?.diffuse.contents = UIColor.black
+            let leftNode = SCNNode(geometry: leftBorder)
+            leftNode.position = SCNVector3(-Float(roadWidth / 2 + borderThickness / 2), Float(borderHeight / 2), 0)
+
+            // Right border rail
+            let rightBorder = SCNBox(width: borderThickness, height: borderHeight, length: tileLength, chamferRadius: 0)
+            rightBorder.firstMaterial?.diffuse.contents = UIColor.black
+            let rightNode = SCNNode(geometry: rightBorder)
+            rightNode.position = SCNVector3(Float(roadWidth / 2 + borderThickness / 2), Float(borderHeight / 2), 0)
+
+            groundNode.addChildNode(leftNode)
+            groundNode.addChildNode(rightNode)
+
             scene.rootNode.addChildNode(groundNode)
             tiles.append(groundNode)
         }
