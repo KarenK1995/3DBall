@@ -95,6 +95,17 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
         cameraNode.position.z = ballNode.presentation.position.z + 10
         cameraNode.look(at: ballNode.presentation.position)
 
+        // Prevent the ball from sinking below the ground level
+        let minY: Float = 0.5
+        if ballNode.presentation.position.y < minY {
+            ballNode.position.y = minY
+            // Clear any residual downward velocity
+            if var velocity = ballNode.physicsBody?.velocity {
+                velocity.y = max(0, velocity.y)
+                ballNode.physicsBody?.velocity = velocity
+            }
+        }
+
         groundManager.update(for: ballNode.presentation.position.z)
         obstacleManager.update(for: ballNode.presentation.position.z)
     }
