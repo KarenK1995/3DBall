@@ -17,13 +17,13 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
     var scene: SCNScene!
     var groundManager: GroundManager!
     var obstacleManager: ObstacleManager!
-<<<<<<< HEAD
+
     weak var gameDelegate: GameViewControllerDelegate?
     private var timer: Timer?
     private var currentScore: Int = 0
-=======
+
     var environmentManager: EnvironmentManager!
->>>>>>> 4cd7cce0df30995a12f463cd7d2ffac3aad8454e
+
 
     override func viewDidLoad() {
         super.viewDidLoad()
