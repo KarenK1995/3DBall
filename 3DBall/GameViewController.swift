@@ -100,6 +100,13 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
 
     @objc func updateGame() {
         ballNode.physicsBody?.applyForce(SCNVector3(0, 0, -1), asImpulse: false)
+        if var velocity = ballNode.physicsBody?.velocity {
+            let maxForwardSpeed: Float = -20
+            if velocity.z < maxForwardSpeed {
+                velocity.z = maxForwardSpeed
+                ballNode.physicsBody?.velocity = velocity
+            }
+        }
         cameraNode.position.z = ballNode.presentation.position.z + 10
         cameraNode.look(at: ballNode.presentation.position)
 
