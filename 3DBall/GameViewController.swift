@@ -17,6 +17,7 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
     var scene: SCNScene!
     var groundManager: GroundManager!
     var obstacleManager: ObstacleManager!
+    var environmentManager: EnvironmentManager!
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -26,6 +27,7 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
         
         scene = SCNScene()
         sceneView.scene = scene
+        environmentManager = EnvironmentManager(scene: scene)
         scene.physicsWorld.contactDelegate = self
         sceneView.showsStatistics = false
         sceneView.allowsCameraControl = false
