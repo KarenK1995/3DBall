@@ -103,7 +103,7 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
         // speed more quickly. The previous value (-1) resulted in slow
         // acceleration causing the ball to spin without translating
         // noticeably on the ground.
-        ballNode.physicsBody?.applyForce(SCNVector3(0, 0, -5), asImpulse: false)
+        ballNode.physicsBody?.applyForce(SCNVector3(0, 0, -1), asImpulse: false)
 
         // Allow a higher forward speed before clamping so the game
         // feels more responsive and matches the fast rolling motion
