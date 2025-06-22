@@ -13,7 +13,7 @@ class GroundManager {
 
     init(scene: SCNScene) {
         let material = SCNMaterial()
-        if let image = UIImage(named: "art.scnassets/texture.png") {
+        if let image = UIImage(named: "ground") {
             material.diffuse.contents = image
             material.diffuse.wrapS = .repeat
             material.diffuse.wrapT = .repeat
