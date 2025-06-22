@@ -121,7 +121,9 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
     }
 
     func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
-        timer?.invalidate()
-        gameDelegate?.gameViewController(self, didEndGameWithScore: currentScore)
+        DispatchQueue.main.async {
+            self.timer?.invalidate()
+            self.gameDelegate?.gameViewController(self, didEndGameWithScore: self.currentScore)
+        }
     }
 }
