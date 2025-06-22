@@ -17,6 +17,9 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
     var scene: SCNScene!
     var groundManager: GroundManager!
     var obstacleManager: ObstacleManager!
+    weak var gameDelegate: GameViewControllerDelegate?
+    private var timer: Timer?
+    private var currentScore: Int = 0
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -37,7 +40,7 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
         setupGestures()
         
         // Timer to update game state (apply movement, update ground and obstacles)
-        Timer.scheduledTimer(timeInterval: 0.02, target: self, selector: #selector(updateGame), userInfo: nil, repeats: true)
+        timer = Timer.scheduledTimer(timeInterval: 0.02, target: self, selector: #selector(updateGame), userInfo: nil, repeats: true)
     }
 
     func setupCamera() {
@@ -95,6 +98,8 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
         cameraNode.position.z = ballNode.presentation.position.z + 10
         cameraNode.look(at: ballNode.presentation.position)
 
+        currentScore = max(currentScore, Int(-ballNode.presentation.position.z))
+
         // Prevent the ball from sinking below the ground level
         let minY: Float = 0.5
         if ballNode.presentation.position.y < minY {
@@ -111,6 +116,7 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
     }
 
     func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
-        print("Collision detected!")
+        timer?.invalidate()
+        gameDelegate?.gameViewController(self, didEndGameWithScore: currentScore)
     }
 }
