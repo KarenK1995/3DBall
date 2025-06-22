@@ -113,6 +113,12 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
                     velocity.z = targetSpeed
                 }
                 ballNode.physicsBody?.velocity = velocity
+                // Match the angular velocity to the linear speed so the
+                // sphere rolls without sliding. This prevents friction from
+                // continuously increasing the spin rate.
+                let radius: Float = 0.5
+                let angularSpeed = velocity.z / radius
+                ballNode.physicsBody?.angularVelocity = SCNVector4(1, 0, 0, angularSpeed)
             }
         }
         cameraNode.position.z = ballNode.presentation.position.z + 10
