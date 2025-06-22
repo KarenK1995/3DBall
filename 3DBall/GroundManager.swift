@@ -52,7 +52,7 @@ class GroundManager {
 
         var startHeight: Float = 0
         var spawnZ: Float = 0
-        for _ in 0..<5 {
+        for _ in 0..<1 {
             let style = GroundStyle.allCases.randomElement()!
             let tile = createTile(style: style)
             tile.position.z = spawnZ

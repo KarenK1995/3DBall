@@ -7,14 +7,16 @@ class PlayerNode: SCNNode {
     private let moveSound: SCNAudioSource
 
     init(textureName: String) {
-        super.init()
+        
 
-        guard let sound = SCNAudioSource(fileNamed: "art.scnassets/moveSound.wav") else {
+        guard let sound = SCNAudioSource(fileNamed: "ball_rolling_wood.wav") else {
             fatalError("Move sound file missing")
         }
         sound.volume = 0.8
         sound.load()
         self.moveSound = sound
+        
+        super.init()
 
         let ballGeometry = SCNSphere(radius: 0.5)
         let material = SCNMaterial()
@@ -34,6 +36,13 @@ class PlayerNode: SCNNode {
     }
 
     required init?(coder aDecoder: NSCoder) {
+        guard let sound = SCNAudioSource(fileNamed: "ball_rolling_wood.wav") else {
+            fatalError("Move sound file missing")
+        }
+        sound.volume = 0.8
+        sound.load()
+        self.moveSound = sound
+        
         super.init(coder: aDecoder)
     }
 
