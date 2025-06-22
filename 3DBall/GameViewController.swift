@@ -99,19 +99,19 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
     }
 
     @objc func updateGame() {
-        // Apply a stronger constant forward force so the ball gains
-        // speed more quickly. The previous value (-1) resulted in slow
-        // acceleration causing the ball to spin without translating
-        // noticeably on the ground.
-        ballNode.physicsBody?.applyForce(SCNVector3(0, 0, -1), asImpulse: false)
-
-        // Allow a higher forward speed before clamping so the game
-        // feels more responsive and matches the fast rolling motion
-        // of the ball.
+        // Gradually accelerate the ball to a target speed to avoid
+        // velocity growing without bound. Directly manipulating the
+        // velocity rather than continuously applying a force yields a
+        // smoother result.
         if var velocity = ballNode.physicsBody?.velocity {
-            let maxForwardSpeed: Float = -40
-            if velocity.z < maxForwardSpeed {
-                velocity.z = maxForwardSpeed
+            let targetSpeed: Float = -20
+            let acceleration: Float = -0.6
+
+            if velocity.z > targetSpeed {
+                velocity.z += acceleration
+                if velocity.z < targetSpeed {
+                    velocity.z = targetSpeed
+                }
                 ballNode.physicsBody?.velocity = velocity
             }
         }

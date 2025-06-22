@@ -88,7 +88,12 @@ class PlayerNode: SCNNode {
         // After the animation completes, update the actual position so the
         // physics body stays in sync with the node.
         let sync = SCNAction.run { [weak self] _ in
-            self?.position = target
+            guard let self = self else { return }
+            self.position = target
+            if var velocity = self.physicsBody?.velocity {
+                velocity.x = 0
+                self.physicsBody?.velocity = velocity
+            }
         }
 
         let sequence = SCNAction.sequence([move, sync])
