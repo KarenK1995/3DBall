@@ -56,11 +56,20 @@ class PlayerNode: SCNNode {
         let newX = lanes[currentLaneIndex]
         let target = SCNVector3(newX, current.y, current.z)
 
-        let action = SCNAction.move(to: target, duration: 0.1)
-        action.timingMode = .easeInEaseOut
-        runAction(action)
-        // Update the actual position so that the physics body stays in sync
-        // with the node after the animation.
-        position = target
+        // Cancel any pending lateral movement so each swipe starts a fresh move
+        removeAction(forKey: "laneMove")
+
+        // Animate to the new lane using an ease-in-ease-out curve for smoothness
+        let move = SCNAction.move(to: target, duration: 0.2)
+        move.timingMode = .easeInEaseOut
+
+        // After the animation completes, update the actual position so the
+        // physics body stays in sync with the node.
+        let sync = SCNAction.run { [weak self] _ in
+            self?.position = target
+        }
+
+        let sequence = SCNAction.sequence([move, sync])
+        runAction(sequence, forKey: "laneMove")
     }
 }
