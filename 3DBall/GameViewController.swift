@@ -124,7 +124,7 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
         }
 
         groundManager.update(for: ballNode.presentation.position.z)
-        obstacleManager.update(for: ballNode.presentation.position.z)
+        obstacleManager.update(for: ballNode.presentation.position.z, score: currentScore)
         environmentManager.update(position: ballNode.presentation.position)
     }
 
