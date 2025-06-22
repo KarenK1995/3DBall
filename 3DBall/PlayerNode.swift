@@ -48,9 +48,19 @@ class PlayerNode: SCNNode {
     }
 
     private func moveToCurrentLane() {
+        // Use the node's presentation position so that we move relative to
+        // the value controlled by the physics simulation. Using `position`
+        // directly can cause large jumps because it is not automatically
+        // updated when a dynamic physics body moves.
+        let current = presentation.position
         let newX = lanes[currentLaneIndex]
-        let action = SCNAction.move(to: SCNVector3(newX, position.y, position.z), duration: 0.1)
+        let target = SCNVector3(newX, current.y, current.z)
+
+        let action = SCNAction.move(to: target, duration: 0.1)
         action.timingMode = .easeInEaseOut
         runAction(action)
+        // Update the actual position so that the physics body stays in sync
+        // with the node after the animation.
+        position = target
     }
 }
