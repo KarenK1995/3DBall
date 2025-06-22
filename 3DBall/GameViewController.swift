@@ -36,7 +36,7 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
         obstacleManager = ObstacleManager(scene: scene)
         setupGestures()
         
-        // Timer to move ground and simulate forward motion
+        // Timer to update game state (apply movement, update ground and obstacles)
         Timer.scheduledTimer(timeInterval: 0.02, target: self, selector: #selector(updateGame), userInfo: nil, repeats: true)
     }
 
