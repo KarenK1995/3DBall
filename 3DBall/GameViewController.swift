@@ -118,6 +118,7 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
 
         groundManager.update(for: ballNode.presentation.position.z)
         obstacleManager.update(for: ballNode.presentation.position.z)
+        environmentManager.update(position: ballNode.presentation.position)
     }
 
     func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
