@@ -2,7 +2,9 @@ import SceneKit
 
 class PlayerNode: SCNNode {
 
-    private let lanes: [Float] = [-2, 0, 2]
+    /// Current lane layout used for lateral movement. This is updated by the
+    /// game controller each frame based on the ground manager.
+    private var lanes: [Float] = [-2, 0, 2]
     private var currentLaneIndex: Int = 1
     private let moveSound: SCNAudioSource
 
@@ -63,6 +65,19 @@ class PlayerNode: SCNNode {
         currentLaneIndex += 1
         moveToCurrentLane()
         playMoveSound()
+    }
+
+    /// Update the current lane layout. This keeps the player centered on the
+    /// lane closest to its current X position when the number of lanes changes.
+    func updateLanePositions(_ newLanes: [Float]) {
+        lanes = newLanes
+        // Find the lane index closest to the current X coordinate
+        let currentX = presentation.position.x
+        if let index = lanes.enumerated().min(by: { abs($0.element - currentX) < abs($1.element - currentX) })?.offset {
+            currentLaneIndex = index
+        } else {
+            currentLaneIndex = min(currentLaneIndex, lanes.count - 1)
+        }
     }
 
     private func playMoveSound() {
