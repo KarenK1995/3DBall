@@ -27,6 +27,18 @@ class GroundManager {
         let borderThickness: CGFloat = 0.2
         let borderHeight: CGFloat = 0.5
 
+        let borderMaterial: SCNMaterial = {
+            let material = SCNMaterial()
+            if let image = UIImage(named: "borderTexture") {
+                material.diffuse.contents = image
+                material.diffuse.wrapS = .repeat
+                material.diffuse.wrapT = .repeat
+            } else {
+                material.diffuse.contents = UIColor.purple
+            }
+            return material
+        }()
+
         for i in 0..<5 {
             let ground = SCNBox(width: roadWidth, height: 0.2, length: tileLength, chamferRadius: 0)
             ground.materials = [material]
@@ -36,13 +48,13 @@ class GroundManager {
 
             // Left border rail
             let leftBorder = SCNBox(width: borderThickness, height: borderHeight, length: tileLength, chamferRadius: 0)
-            leftBorder.firstMaterial?.diffuse.contents = UIColor.purple
+            leftBorder.firstMaterial = borderMaterial
             let leftNode = SCNNode(geometry: leftBorder)
             leftNode.position = SCNVector3(-Float(roadWidth / 2 + borderThickness / 2), Float(borderHeight / 2), 0)
 
             // Right border rail
             let rightBorder = SCNBox(width: borderThickness, height: borderHeight, length: tileLength, chamferRadius: 0)
-            rightBorder.firstMaterial?.diffuse.contents = UIColor.purple
+            rightBorder.firstMaterial = borderMaterial
             let rightNode = SCNNode(geometry: rightBorder)
             rightNode.position = SCNVector3(Float(roadWidth / 2 + borderThickness / 2), Float(borderHeight / 2), 0)
 
