@@ -67,8 +67,13 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate, SCNSceneR
     }
 
     func setupGestures() {
-        let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
-        sceneView.addGestureRecognizer(pan)
+        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        swipeLeft.direction = .left
+        sceneView.addGestureRecognizer(swipeLeft)
+
+        let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipe(_:)))
+        swipeRight.direction = .right
+        sceneView.addGestureRecognizer(swipeRight)
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
         sceneView.addGestureRecognizer(tap)
@@ -78,20 +83,14 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate, SCNSceneR
         sceneView.addGestureRecognizer(swipeUp)
     }
 
-    @objc func handlePan(_ gesture: UIPanGestureRecognizer) {
-        let translation = gesture.translation(in: sceneView)
-        guard gesture.state == .changed else { return }
-
-        if abs(translation.x) > abs(translation.y) && abs(translation.x) > 20 {
-            if translation.x > 0 {
-                ballNode.moveRight()
-            } else {
-                ballNode.moveLeft()
-            }
-            gesture.setTranslation(.zero, in: sceneView)
-        } else if translation.y < -20 && abs(translation.y) > abs(translation.x) {
-            ballNode.jump()
-            gesture.setTranslation(.zero, in: sceneView)
+    @objc func handleSwipe(_ gesture: UISwipeGestureRecognizer) {
+        switch gesture.direction {
+        case .left:
+            ballNode.moveLeft()
+        case .right:
+            ballNode.moveRight()
+        default:
+            break
         }
     }
 
