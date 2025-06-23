@@ -121,17 +121,17 @@ private enum ObstacleType: CaseIterable {
 class ObstacleManager {
     private var scene: SCNScene
     private var obstacles: [SCNNode] = []
-    private let ground: GroundManager
+    private let lanes: [Float] = [-2, 0, 2]
 
-    init(scene: SCNScene, groundManager: GroundManager) {
+    init(scene: SCNScene) {
         self.scene = scene
-        self.ground = groundManager
     }
 
     func spawnObstacle(atZ z: Float, score: Int) {
-        guard let type = ObstacleType.allCases.randomElement() else { return }
-        let lanes = ground.lanePositions(for: z)
-        guard let lane = lanes.randomElement() else { return }
+        guard
+            let lane = lanes.randomElement(),
+            let type = ObstacleType.allCases.randomElement()
+        else { return }
 
         guard let obstacle = type.createNode(score: score) else {
             // Wall gaps or other no-node obstacles

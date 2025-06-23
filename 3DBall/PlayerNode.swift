@@ -2,7 +2,7 @@ import SceneKit
 
 class PlayerNode: SCNNode {
 
-    private var lanes: [Float] = [-2, 0, 2]
+    private let lanes: [Float] = [-2, 0, 2]
     private var currentLaneIndex: Int = 1
     private let moveSound: SCNAudioSource
 
@@ -49,15 +49,6 @@ class PlayerNode: SCNNode {
         if abs(self.presentation.position.y - 0.5) < 0.1 {
             self.physicsBody?.applyForce(SCNVector3(0, 4, 0), asImpulse: true)
         }
-    }
-
-    /// Update available lanes based on the current ground segment.
-    func updateLanes(_ newLanes: [Float]) {
-        lanes = newLanes
-        if currentLaneIndex >= lanes.count {
-            currentLaneIndex = lanes.count - 1
-        }
-        moveToCurrentLane()
     }
 
     func moveLeft() {
