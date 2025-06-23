@@ -9,7 +9,7 @@ import UIKit
 import SceneKit
 import Foundation
 
-class GameViewController: UIViewController, SCNPhysicsContactDelegate {
+class GameViewController: UIViewController, SCNPhysicsContactDelegate, SCNSceneRendererDelegate {
 
     var sceneView: SCNView!
     var ballNode: PlayerNode!
@@ -19,8 +19,8 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
     var obstacleManager: ObstacleManager!
 
     weak var gameDelegate: GameViewControllerDelegate?
-    private var timer: Timer?
     private var currentScore: Int = 0
+    private var lastUpdateTime: TimeInterval?
 
     var environmentManager: EnvironmentManager!
 
@@ -43,9 +43,10 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
         setupGround()
         obstacleManager = ObstacleManager(scene: scene)
         setupGestures()
-        
-        // Timer to update game state (apply movement, update ground and obstacles)
-        timer = Timer.scheduledTimer(timeInterval: 0.02, target: self, selector: #selector(updateGame), userInfo: nil, repeats: true)
+
+        // Use the view's renderer callback to update the game every frame.
+        sceneView.delegate = self
+        lastUpdateTime = nil
     }
 
     func setupCamera() {
@@ -98,17 +99,17 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
         ballNode.jump()
     }
 
-    @objc func updateGame() {
+    func updateGame(deltaTime: TimeInterval) {
         // Gradually accelerate the ball to a target speed to avoid
         // velocity growing without bound. Directly manipulating the
         // velocity rather than continuously applying a force yields a
         // smoother result.
         if var velocity = ballNode.physicsBody?.velocity {
             let targetSpeed: Float = -20
-            let acceleration: Float = -0.6
+            let accelerationPerSecond: Float = -30
 
             if velocity.z > targetSpeed {
-                velocity.z += acceleration
+                velocity.z += accelerationPerSecond * Float(deltaTime)
                 if velocity.z < targetSpeed {
                     velocity.z = targetSpeed
                 }
@@ -144,8 +145,17 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate {
 
     func physicsWorld(_ world: SCNPhysicsWorld, didBegin contact: SCNPhysicsContact) {
         DispatchQueue.main.async {
-            self.timer?.invalidate()
+            self.sceneView.delegate = nil
             self.gameDelegate?.gameViewController(self, didEndGameWithScore: self.currentScore)
         }
+    }
+
+    // MARK: - SCNSceneRendererDelegate
+    func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+        if let last = lastUpdateTime {
+            let delta = time - last
+            updateGame(deltaTime: delta)
+        }
+        lastUpdateTime = time
     }
 }
