@@ -9,9 +9,24 @@ import SceneKit
 
 class GroundManager {
 
-    private(set) var tiles: [SCNNode] = []
+    /// Representation for a piece of ground with its lane layout.
+    private struct GroundTile {
+        let node: SCNNode
+        var lanePositions: [Float]
+    }
+
+    private(set) var tiles: [GroundTile] = []
+
+    private let scene: SCNScene
+    private let material: SCNMaterial
+    private let borderMaterial: SCNMaterial
+    private let borderThickness: CGFloat = 0.2
+    private let borderHeight: CGFloat = 0.5
+    private let tileLength: Float = 20.0
+    private let laneSpacing: Float = 2.0
 
     init(scene: SCNScene) {
+        self.scene = scene
         let material = SCNMaterial()
         if let image = UIImage(named: "ground") {
             material.diffuse.contents = image
@@ -21,11 +36,7 @@ class GroundManager {
         } else {
             material.diffuse.contents = UIColor.darkGray
         }
-
-        let roadWidth: CGFloat = 6.0
-        let tileLength: CGFloat = 20.0
-        let borderThickness: CGFloat = 0.2
-        let borderHeight: CGFloat = 0.5
+        self.material = material
 
         let borderMaterial: SCNMaterial = {
             let material = SCNMaterial()
@@ -38,41 +49,77 @@ class GroundManager {
             }
             return material
         }()
+        self.borderMaterial = borderMaterial
 
         for i in 0..<5 {
-            let ground = SCNBox(width: roadWidth, height: 0.2, length: tileLength, chamferRadius: 0)
-            ground.materials = [material]
-            let groundNode = SCNNode(geometry: ground)
-            groundNode.position = SCNVector3(0, 0, -Float(i) * Float(tileLength))
-            groundNode.physicsBody = SCNPhysicsBody.static()
-
-            // Left border rail
-            let leftBorder = SCNBox(width: borderThickness, height: borderHeight, length: tileLength, chamferRadius: 0)
-            leftBorder.firstMaterial?.diffuse.contents = UIColor.purple
-            leftBorder.firstMaterial = borderMaterial
-            let leftNode = SCNNode(geometry: leftBorder)
-            leftNode.position = SCNVector3(-Float(roadWidth / 2 + borderThickness / 2), Float(borderHeight / 2), 0)
-
-            // Right border rail
-            let rightBorder = SCNBox(width: borderThickness, height: borderHeight, length: tileLength, chamferRadius: 0)
-            rightBorder.firstMaterial?.diffuse.contents = UIColor.purple
-            rightBorder.firstMaterial = borderMaterial
-            let rightNode = SCNNode(geometry: rightBorder)
-            rightNode.position = SCNVector3(Float(roadWidth / 2 + borderThickness / 2), Float(borderHeight / 2), 0)
-
-            groundNode.addChildNode(leftNode)
-            groundNode.addChildNode(rightNode)
-
-            scene.rootNode.addChildNode(groundNode)
-            tiles.append(groundNode)
+            let tile = createTile(zOffset: -Float(i) * tileLength)
+            scene.rootNode.addChildNode(tile.node)
+            tiles.append(tile)
         }
     }
 
+    /// Create a new ground tile with random width, lane layout and slope.
+    private func createTile(zOffset: Float) -> GroundTile {
+        let laneCounts = [1, 2, 3, 5]
+        let laneCount = laneCounts.randomElement() ?? 3
+        let width = laneSpacing * Float(laneCount - 1) + 2.0
+
+        let ground = SCNBox(width: CGFloat(width), height: 0.2, length: CGFloat(tileLength), chamferRadius: 0)
+        ground.materials = [material]
+        let groundNode = SCNNode(geometry: ground)
+        groundNode.position = SCNVector3(0, 0, zOffset)
+        groundNode.physicsBody = SCNPhysicsBody.static()
+
+        // Random slope to create slide effect
+        let slopes: [Float] = [0, 0.2, -0.2]
+        groundNode.eulerAngles.x = slopes.randomElement() ?? 0
+
+        // Left and right borders
+        let leftBorder = SCNBox(width: borderThickness, height: borderHeight, length: CGFloat(tileLength), chamferRadius: 0)
+        leftBorder.firstMaterial = borderMaterial
+        let leftNode = SCNNode(geometry: leftBorder)
+        leftNode.position = SCNVector3(-width / 2 - Float(borderThickness) / 2, Float(borderHeight / 2), 0)
+
+        let rightBorder = SCNBox(width: borderThickness, height: borderHeight, length: CGFloat(tileLength), chamferRadius: 0)
+        rightBorder.firstMaterial = borderMaterial
+        let rightNode = SCNNode(geometry: rightBorder)
+        rightNode.position = SCNVector3(width / 2 + Float(borderThickness) / 2, Float(borderHeight / 2), 0)
+
+        groundNode.addChildNode(leftNode)
+        groundNode.addChildNode(rightNode)
+
+        var lanes: [Float] = []
+        let startX = -laneSpacing * Float(laneCount - 1) / 2
+        for i in 0..<laneCount {
+            lanes.append(startX + Float(i) * laneSpacing)
+        }
+
+        return GroundTile(node: groundNode, lanePositions: lanes)
+    }
+
+    /// Recycle tiles as the player moves forward and randomize their layout.
     func update(for playerZ: Float) {
-        for tile in tiles {
-            if tile.position.z - playerZ > 30 {
-                tile.position.z -= 100
+        for i in 0..<tiles.count {
+            if tiles[i].node.position.z - playerZ > 30 {
+                let newZ = tiles[i].node.position.z - Float(tiles.count) * tileLength
+                tiles[i].node.removeFromParentNode()
+                let newTile = createTile(zOffset: newZ)
+                scene.rootNode.addChildNode(newTile.node)
+                tiles[i] = newTile
             }
         }
+    }
+
+    /// Lane positions for the segment at the specified Z coordinate.
+    func lanePositions(for z: Float) -> [Float] {
+        for tile in tiles {
+            let startZ = tile.node.position.z - tileLength
+            let endZ = tile.node.position.z
+            if z <= endZ && z > startZ {
+                return tile.lanePositions
+            }
+        }
+        // Fallback to first tile's lanes
+        return tiles.first?.lanePositions ?? [-2, 0, 2]
     }
 }
