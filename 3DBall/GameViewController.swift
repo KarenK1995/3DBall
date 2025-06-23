@@ -41,7 +41,7 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate, SCNSceneR
         setupCamera()
         setupBall()
         setupGround()
-        obstacleManager = ObstacleManager(scene: scene)
+        obstacleManager = ObstacleManager(scene: scene, groundManager: groundManager)
         setupGestures()
 
         // Use the view's renderer callback to update the game every frame.
@@ -138,6 +138,8 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate, SCNSceneR
             }
         }
 
+        let lanes = groundManager.lanePositions(for: ballNode.presentation.position.z)
+        ballNode.updateLanes(lanes)
         groundManager.update(for: ballNode.presentation.position.z)
         obstacleManager.update(for: ballNode.presentation.position.z, score: currentScore)
         environmentManager.update(position: ballNode.presentation.position)
