@@ -16,6 +16,8 @@ class GroundManager {
     }
 
     private var tiles: [GroundTile] = []
+    private var tileCounter: Int = 0
+    private let transitionTileIndex: Int = 10
 
     private let scene: SCNScene
     private let material: SCNMaterial
@@ -52,16 +54,21 @@ class GroundManager {
         self.borderMaterial = borderMaterial
 
         for i in 0..<5 {
-            let tile = createTile(zOffset: -Float(i) * tileLength)
+            let tile = createTile(zOffset: -Float(i) * tileLength, index: tileCounter)
+            tileCounter += 1
             scene.rootNode.addChildNode(tile.node)
             tiles.append(tile)
         }
     }
 
     /// Create a new ground tile with random width, lane layout and slope.
-    private func createTile(zOffset: Float) -> GroundTile {
-        let laneCounts = [1, 2, 3, 5]
-        let laneCount = laneCounts.randomElement() ?? 3
+    private func createTile(zOffset: Float, index: Int) -> GroundTile {
+        let laneCount: Int
+        if index < transitionTileIndex {
+            laneCount = 3
+        } else {
+            laneCount = 5
+        }
         let width = laneSpacing * Float(laneCount - 1) + 2.0
 
         let ground = SCNBox(width: CGFloat(width), height: 0.2, length: CGFloat(tileLength), chamferRadius: 0)
@@ -103,7 +110,8 @@ class GroundManager {
             if tiles[i].node.position.z - playerZ > 30 {
                 let newZ = tiles[i].node.position.z - Float(tiles.count) * tileLength
                 tiles[i].node.removeFromParentNode()
-                let newTile = createTile(zOffset: newZ)
+                let newTile = createTile(zOffset: newZ, index: tileCounter)
+                tileCounter += 1
                 scene.rootNode.addChildNode(newTile.node)
                 tiles[i] = newTile
             }
