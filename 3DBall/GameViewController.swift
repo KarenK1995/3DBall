@@ -105,8 +105,11 @@ class GameViewController: UIViewController, SCNPhysicsContactDelegate, SCNSceneR
         // velocity rather than continuously applying a force yields a
         // smoother result.
         if var velocity = ballNode.physicsBody?.velocity {
-            let targetSpeed: Float = -20
-            let accelerationPerSecond: Float = -30
+            // Slow the ball's forward movement so gameplay is more manageable.
+            // A lower target speed and gentler acceleration keep the pace fun
+            // without feeling frantic.
+            let targetSpeed: Float = -10
+            let accelerationPerSecond: Float = -15
 
             if velocity.z > targetSpeed {
                 velocity.z += accelerationPerSecond * Float(deltaTime)
