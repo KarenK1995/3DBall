@@ -70,33 +70,25 @@ class PlayerNode: SCNNode {
     }
 
     private func moveToCurrentLane() {
-        // Use the node's presentation position so that we move relative to
-        // the value controlled by the physics simulation. Using `position`
-        // directly can cause large jumps because it is not automatically
-        // updated when a dynamic physics body moves.
-        let current = presentation.position
-        let newX = lanes[currentLaneIndex]
-        let target = SCNVector3(newX, current.y, current.z)
+        // Determine the horizontal distance to the desired lane based on the
+        // node's presentation position so we stay in sync with the physics
+        // simulation.
+        let currentX = presentation.position.x
+        let targetX = lanes[currentLaneIndex]
+        let delta = targetX - currentX
 
-        // Cancel any pending lateral movement so each swipe starts a fresh move
-        removeAction(forKey: "laneMove")
-
-        // Animate to the new lane using an ease-in-ease-out curve for smoothness
-        let move = SCNAction.move(to: target, duration: 0.2)
-        move.timingMode = .easeInEaseOut
-
-        // After the animation completes, update the actual position so the
-        // physics body stays in sync with the node.
-        let sync = SCNAction.run { [weak self] _ in
-            guard let self = self else { return }
-            self.position = target
-            if var velocity = self.physicsBody?.velocity {
-                velocity.x = 0
-                self.physicsBody?.velocity = velocity
-            }
+        // Clear any existing lateral velocity so that each swipe starts a fresh
+        // movement without overshooting.
+        if var velocity = physicsBody?.velocity {
+            velocity.x = 0
+            physicsBody?.velocity = velocity
         }
 
-        let sequence = SCNAction.sequence([move, sync])
-        runAction(sequence, forKey: "laneMove")
+        // Apply an impulse proportional to the distance to smoothly slide the
+        // ball into the requested lane while allowing it to keep rolling
+        // forward without interruption.
+        let impulseStrength: Float = 4.0
+        let impulse = SCNVector3(delta * impulseStrength, 0, 0)
+        physicsBody?.applyForce(impulse, asImpulse: true)
     }
 }
