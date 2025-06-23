@@ -15,7 +15,7 @@ class GroundManager {
         var lanePositions: [Float]
     }
 
-    private(set) var tiles: [GroundTile] = []
+    private var tiles: [GroundTile] = []
 
     private let scene: SCNScene
     private let material: SCNMaterial
